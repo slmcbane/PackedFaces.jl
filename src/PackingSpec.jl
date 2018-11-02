@@ -1,0 +1,157 @@
+@enum FaceCode TOP RIGHT LEFT BOTTOM
+
+"""
+Synopsis
+--------
+```
+FaceInterface(faces::Pair{Int, Int}, which::Integer,
+              ranges::Tuple{UnitRange{Int}, UnitRange{Int}})
+```
+`faces`: A pair giving the indices (1-based) of the two faces who are interfaced.
+
+`which`: A `FaceCode` (`TOP`, `RIGHT`, `LEFT`, `BOTTOM`) specifying which side of the
+*first* given face is the interface.
+
+`ranges`: The range of indices that are covered by the interface on respective faces.
+Length of `ranges[1]` must match `ranges[2]`, naturally, and the ranges must be subsets
+of the valid indices on each face.
+
+The constructed object stores no data; the interface information is encoded in the type.
+"""
+struct FaceInterface{FACES, WHICH, RANGES}
+    function FaceInterface(faces::Pair{Int, Int}, which::FaceCode,
+                           ranges::Tuple{UnitRange{Int}, UnitRange{Int}})
+        @assert faces[1] > 0 && faces[2] > 0
+        @assert faces[1] != faces[2]
+        @assert ranges[1][1] ∈ 1:ranges[1][end]
+        @assert ranges[2][1] ∈ 1:ranges[2][end]
+        @assert length(ranges[1]) == length(ranges[2])
+        new{faces, which, ranges}()
+    end
+end
+
+struct FaceTransform{ROTATE, TRANSPOSE}
+    function FaceTransform(; rotations::Int = 0, transpose::Bool = false)
+        rotations = (rotations % 4 + 4 * (sign(rotations) == -1)) % 4
+        new{rotations, transpose}()
+    end
+end
+
+struct PackingSpec{M, N, NFACES, FACEBOUNDS, TRANSFORMS, INTERFACES}
+    function PackingSpec(; nfaces::Int,
+                           xybounds::Tuple{Int, Int},
+                           facebounds::NTuple{NFACES, Tuple{UnitRange{Int},UnitRange{Int}}},
+                           transforms::NTuple{NFACES, FaceTransform},
+                           interfaces::NTuple{NI, FaceInterface}
+                        ) where {NFACES, NI}
+        @assert nfaces === NFACES "Number of face specifications != given nfaces"
+        M, N = xybounds
+        @assert M > 0 && N > 0 "Why are you using this module?"
+
+        # Ensures that faces specified are an exact cover of (1, M) × (1, N)
+        check_face_bounds(M, N, facebounds)
+        NI != 0 && check_interfaces(facebounds, transforms, interfaces)
+        new{M, N, NFACES, facebounds, transforms, interfaces}()
+    end
+end
+
+@pure nfaces(::PackingSpec{M, N, NFACES}) where {M, N, NFACES} = NFACES
+@pure facebounds(::PackingSpec{M, N, NF, FB}) where {M, N, NF, FB} = FB
+@pure xybounds(::PackingSpec{M, N}) where {M, N} = (M, N)
+@pure transforms(::PackingSpec{M, N, NF, FB, TR}) where {M, N, NF, FB, TR} = TR
+@pure interfaces(::PackingSpec{M, N, NF, FB, T, I}) where {M, N, NF, FB, T, I} = I
+
+function apply_face_transform(A::AbstractArray{T, N}, ::FaceTransform{ROTATE, TRANSPOSE}
+                             ) where {T, N, ROTATE, TRANSPOSE}
+    @assert ROTATE ∈ (0, 1, 2, 3)
+
+    rotate(A) = MirroredArray(transpose(A), 2)
+    if TRANSPOSE
+        if ROTATE == 0
+            PermutedDimsArray(A, (2, 1, 3:N...,))
+        elseif ROTATE == 1
+            MirroredArray(A, 1)
+        elseif ROTATE == 2
+            PermutedDimsArray(MirroredArray(MirroredArray(A, 1), 2), (2, 1, 3:N...,))
+        else # ROTATE == 3
+            MirroredArray(A, 2)
+        end
+    else
+        if ROTATE == 0
+            A
+        elseif ROTATE == 1
+            MirroredArray(PermutedDimsArray(A, (2, 1, 3:N...,)), 2)
+        elseif ROTATE == 2
+            MirroredArray(MirroredArray(A, 1), 2)
+        else # ROTATE == 3
+            PermutedDimsArray(MirroredArray(A, 2), (2, 1, 3:N...,))
+        end
+    end
+end
+
+# @TODO this is not a complete implementation; a set of faces that is not an exact cover
+# can still pass this test.
+function check_face_bounds(M, N, bounds::NTuple{NFACES, Tuple{UnitRange{Int},UnitRange{Int}}}
+                          ) where NFACES
+    for i ∈ 1:NFACES
+        @assert bounds[i][1][1] < bounds[i][1][end]
+        @assert bounds[i][2][1] < bounds[i][2][end]
+        for j ∈ i+1:NFACES
+            # Checks that the two faces specified by these two sets of bounds do
+            # not overlap.
+            test_bounds_intersection(bounds[i], bounds[j])
+        end
+        # Make sure the range of first-dimension indices is within the range of M
+        @assert bounds[i][1][1] >= 1 && bounds[i][1][2] <= M
+        # Make sure the range of second-dimension indices is with the range of N
+        @assert bounds[i][2][1] >= 1 && bounds[i][2][2] <= N
+    end
+
+    # Checks that all indices in M and N are covered.
+    sorted = sort(collect(bounds), by=t->t[1][1])
+    @assert sorted[1][1][1] == 1 && sorted[end][1][end] == M
+    for i ∈ 1:NFACES-1
+        @assert sorted[i][1][end] >= sorted[i+1][1][1] - 1
+    end
+
+    sorted = sort(collect(bounds), by=t->t[2][1])
+    @assert sorted[1][2][1] == 1 && sorted[end][2][end] == N
+    for i ∈ 1:NFACES-1
+        @assert sorted[i][2][end] >= sorted[i+1][2][1] - 1
+    end
+end
+
+function test_bounds_intersection(b1, b2)
+    if b1[1][1] <= b2[1][end]
+        if b2[1][1] <= b1[1][end]
+            @assert b1[2][1] > b2[2][end] || b2[2][1] > b1[2][end]
+        end
+    end
+end
+
+function check_interfaces(bounds::NTuple{NFACES, Tuple{UnitRange{Int},UnitRange{Int}}},
+                          transforms::NTuple{NFACES, FaceTransform},
+                          interfaces::NTuple{NI, FaceInterface}
+                         ) where {NFACES, NI}
+    for interface ∈ interfaces
+        check_interface(interface, bounds, transforms)
+    end
+end
+
+function check_interface(::FaceInterface{FACES, WHICH, RANGES},
+                         bounds::NTuple{NFACES, Tuple{UnitRange{Int},UnitRange{Int}}},
+                         transforms::NTuple{NFACES, FaceTransform}
+                        ) where {FACES, WHICH, RANGES, NFACES}
+    @assert FACES[1] <= NFACES && FACES[2] <= NFACES
+
+    A = apply_face_transform(CartesianIndices(bounds[FACES[1]]), transforms[FACES[1]])
+    B = apply_face_transform(CartesianIndices(bounds[FACES[2]]), transforms[FACES[2]])
+
+    if WHICH ∈ (TOP, BOTTOM)
+        @assert RANGES[1][1] >= 1 && RANGES[1][end] <= size(A, 2)
+        @assert RANGES[2][1] >= 1 && RANGES[2][end] <= size(B, 2)
+    else
+        @assert RANGES[1][1] >= 1 && RANGES[1][end] <= size(A, 1)
+        @assert RANGES[2][1] >= 1 && RANGES[2][end] <= size(B, 1)
+    end
+end

@@ -9,22 +9,22 @@ FaceInterface(faces::Pair{Int, Int}, which::Integer,
 ```
 `faces`: A pair giving the indices (1-based) of the two faces who are interfaced.
 
-`which`: A `FaceCode` (`TOP`, `RIGHT`, `LEFT`, `BOTTOM`) specifying which side of the
-*first* given face is the interface.
+`which`: A pair of `FaceCode`s giving the side of each face that contains the interface,
+in respective order. This is necessary to handle the cases at the arctic and antarctic in
+my application; the "top" of the arctic face, which has no natural orientation, will
+interface to the top of another face no matter how it is arranged.
 
-`ranges`: The range of indices that are covered by the interface on respective faces.
-Length of `ranges[1]` must match `ranges[2]`, naturally, and the ranges must be subsets
-of the valid indices on each face.
+`ranges`: A pair of `OrdinalRange`s giving the range of indices on each face that make
+up the interface. The element at `ranges[1][1]` on the first face of the interface pairs
+with the element at `ranges[2][1]` on the second face, etc.
 
 The constructed object stores no data; the interface information is encoded in the type.
 """
 struct FaceInterface{FACES, WHICH, RANGES}
-    function FaceInterface(faces::Pair{Int, Int}, which::FaceCode,
-                           ranges::Tuple{UnitRange{Int}, UnitRange{Int}})
+    function FaceInterface(faces::Pair{Int, Int}, which::Pair{FaceCode, FaceCode},
+                           ranges::Pair{R1, R2}) where R1 <: OrdinalRange{Int,Int} where R2 <: OrdinalRange{Int,Int}
         @assert faces[1] > 0 && faces[2] > 0
         @assert faces[1] != faces[2]
-        @assert ranges[1][1] ∈ 1:ranges[1][end]
-        @assert ranges[2][1] ∈ 1:ranges[2][end]
         @assert length(ranges[1]) == length(ranges[2])
         new{faces, which, ranges}()
     end

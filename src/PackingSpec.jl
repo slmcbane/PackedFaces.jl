@@ -168,14 +168,19 @@ function check_interface(::FaceInterface{FACES, WHICH, RANGES},
     end
 end
 
-@generated function face_connectivity(interfaces::NTuple{NI, FaceInterface}, ::Val{N}) where {NI, N}
+@pure function face_connectivity(interfaces::NTuple{NI, FaceInterface}, ::Val{N}) where {NI, N}
     connect = (i for i ∈ interfaces if N ∈ faces(i))
-    connect = (N == faces[i][2] ? swapfaces(i) : i for i ∈ connect)
+    connect = (N == faces(i)[2] ? swapfaces(i) : i for i ∈ connect)
     :($((connect...,)))
 end
 
 @pure function connectivity(interfaces::NTuple{NI, FaceInterface}, ::Val{NFACE}) where {NI, NFACE}
-    (face_connectivity(interfaces, Val(NFACE)), connectivity(interfaces, Val(NFACE-1))...,)
+    if NFACE > 0
+        (face_connectivity(interfaces, Val(NFACE)),
+         connectivity(interfaces, Val(NFACE-1))...,) |> reverse
+    else
+        ()
+    end
 end
 
 @pure function connectivity(::PackingSpec{M, N, NF, FB, T, I}) where {M, N, NF, FB, T, I}

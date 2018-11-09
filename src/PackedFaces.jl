@@ -35,6 +35,14 @@ end
     connectivity(SPEC, face)
 end
 
+@pure function connectivity(::Type{PackedFaceArray{T, DIM, SPEC}}) where {T, DIM, SPEC}
+    connectivity(SPEC)
+end
+
+@pure function connectivity(::Type{PackedFaceArray{T, DIM, SPEC}}, face::Integer) where {T, DIM, SPEC}
+    connectivity(SPEC, face)
+end
+
 include("packed_array.jl")
 
 end # module

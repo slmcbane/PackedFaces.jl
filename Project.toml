@@ -1,7 +1,7 @@
 name = "PackedFaces"
 uuid = "abdf1db6-de0a-11e8-264b-bfe2fcddb17d"
 authors = ["Sean McBane <sean.mcbane@protonmail.com>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 MirroredArrays = "edfed022-ddf0-11e8-3461-e736d26fdb96"

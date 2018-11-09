@@ -2,7 +2,7 @@ const packed_array_args = Set(
     [:xybounds, :facebounds, :transforms, :interfaces, :nfaces]
 )
 
-macro packed_array(tp_name::Symbol, N, args...)
+macro packed_array(tp_name::Symbol, args...)
     args_received = Dict{Symbol, Any}()
 
     for ex in args
@@ -33,15 +33,13 @@ macro packed_array(tp_name::Symbol, N, args...)
             facebounds = $(esc(args_received[:facebounds])),
             transforms = $(esc(args_received[:transforms])),
             interfaces = $(esc(args_received[:interfaces]))
-            ), ndims = $(esc(N))
-
-            @assert ndims isa Integer "ndims should be an integer; got $ndims"
-            struct $(tp_name){T, ARR} <: PackedFaceArray{T, ndims, SPEC}
+           )
+            struct $(tp_name){T, N, ARR} <: PackedFaceArray{T, N, SPEC}
                 data::ARR
 
-                function $(tp_name)(A::AbstractArray{T, ndims}) where T
+                function $(tp_name)(A::AbstractArray{T, N}) where {T, N}
                     @assert size(A)[1:2] === xybounds(SPEC)
-                    new{T, typeof(A)}(A)
+                    new{T, N, typeof(A)}(A)
                 end
             end
         end

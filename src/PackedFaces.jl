@@ -6,7 +6,7 @@ import Base: getindex, setindex!, size
 using Base: @pure
 
 export PackingSpec, FaceInterface, FaceTransform, apply_face_transform, PackedFaceArray,
-       FaceCode, TOP, RIGHT, LEFT, BOTTOM, @packed_array
+       FaceCode, TOP, RIGHT, LEFT, BOTTOM, @packed_array, faces, connectivity
 
 include("PackingSpec.jl")
 
@@ -29,6 +29,11 @@ function faces(A::PackedFaceArray{T, DIM, SPEC}) where {T, DIM, SPEC}
 end
 
 @pure packing_spec(::PackedFaceArray{T, DIM, SPEC}) where {T, DIM, SPEC} = SPEC
+
+@pure connectivity(::PackedFaceArray{T, DIM, SPEC}) where {T, DIM, SPEC} = connectivity(SPEC)
+@pure function connectivity(::PackedFaceArray{T, DIM, SPEC}, face::Integer) where {T, DIM, SPEC}
+    connectivity(SPEC, face)
+end
 
 include("packed_array.jl")
 

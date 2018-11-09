@@ -38,7 +38,7 @@ macro packed_array(tp_name::Symbol, args...)
                 data::ARR
 
                 function $(tp_name)(A::AbstractArray{T, N}) where {T, N}
-                    @assert size(A)[1:2] === xybounds(SPEC)
+                    @assert size(A)[1:2] === PackedFaces.xybounds(SPEC)
                     new{T, N, typeof(A)}(A)
                 end
             end

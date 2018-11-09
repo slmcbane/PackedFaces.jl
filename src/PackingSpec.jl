@@ -72,7 +72,7 @@ function apply_face_transform(A::AbstractArray{T, N}, ::FaceTransform{ROTATE, TR
         elseif ROTATE == 1
             MirroredArray(A, 1)
         elseif ROTATE == 2
-            PermutedDimsArray(MirroredArray(MirroredArray(A, 1), 2), (2, 1, 3:N...,))
+            PermutedDimsArray(MirroredArray(A, 1, 2), (2, 1, 3:N...,))
         else # ROTATE == 3
             MirroredArray(A, 2)
         end
@@ -82,7 +82,7 @@ function apply_face_transform(A::AbstractArray{T, N}, ::FaceTransform{ROTATE, TR
         elseif ROTATE == 1
             MirroredArray(PermutedDimsArray(A, (2, 1, 3:N...,)), 2)
         elseif ROTATE == 2
-            MirroredArray(MirroredArray(A, 1), 2)
+            MirroredArray(A, 1, 2)
         else # ROTATE == 3
             PermutedDimsArray(MirroredArray(A, 2), (2, 1, 3:N...,))
         end
@@ -147,11 +147,19 @@ function check_interface(::FaceInterface{FACES, WHICH, RANGES},
     A = apply_face_transform(CartesianIndices(bounds[FACES[1]]), transforms[FACES[1]])
     B = apply_face_transform(CartesianIndices(bounds[FACES[2]]), transforms[FACES[2]])
 
-    if WHICH ∈ (TOP, BOTTOM)
-        @assert RANGES[1][1] >= 1 && RANGES[1][end] <= size(A, 2)
-        @assert RANGES[2][1] >= 1 && RANGES[2][end] <= size(B, 2)
+    extr = (extrema(RANGES[1]), extrema(RANGES[2]))
+
+    @assert extr[1][1] >= 1 && extr[2][1] >= 1
+    
+    if WHICH[1] ∈ (TOP, BOTTOM)
+        @assert extr[1][2] <= size(A, 2)
     else
-        @assert RANGES[1][1] >= 1 && RANGES[1][end] <= size(A, 1)
-        @assert RANGES[2][1] >= 1 && RANGES[2][end] <= size(B, 1)
+        @assert extr[1][2] <= size(A, 1)
+    end
+
+    if WHICH[2] ∈ (TOP, BOTTOM)
+        @assert extr[2][2] <= size(B, 2)
+    else
+        @assert extr[2][2] <= size(B, 1)
     end
 end

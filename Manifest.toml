@@ -1,6 +1,6 @@
 [[MirroredArrays]]
-git-tree-sha1 = "1f9cbf34a8cd666cc40cff9f5a1f2594e01bf5f4"
+git-tree-sha1 = "412a32947ae4f599e5a3422c7b8fff4167e8504f"
 repo-rev = "master"
 repo-url = "https://github.com/slmcbane/MirroredArrays.jl"
 uuid = "edfed022-ddf0-11e8-3461-e736d26fdb96"
-version = "0.1.0"
+version = "0.2.0"

@@ -68,15 +68,15 @@ julia> transforms = (
 
 julia> interface = ( # Define the interfaces between faces
                      # I *think* this syntax is clear but let me know
-           FaceInterface(1 => 2, BOTTOM, (1:2, 1:2)),
-           FaceInterface(1 => 3, TOP, (5:6, 1:2)),
-           FaceInterface(1 => 4, RIGHT, (1:2, 1:2))
+           FaceInterface(1 => 2, BOTTOM => TOP, 1:2 => 1:2),
+           FaceInterface(1 => 3, TOP => BOTTOM, 5:6 => 1:2),
+           FaceInterface(1 => 4, RIGHT => LEFT, 1:2 => 1:2)
        ) # Interfaces aren't used for now but will be for exch routines
 (FaceInterface{1 => 2,BOTTOM::FaceCode = 3,(1:2, 1:2)}(), FaceInterface{1 => 3,TOP::FaceCode = 0,(5:6, 1:2)}(), FaceInterface{1 => 4,RIGHT::FaceCode = 1,(1:2, 1:2)}())
 
 julia> # Generate the type definition
 
-julia> @packed_array MyArrayType 2 nfaces=4 xybounds=xybounds facebounds=facebounds transforms=transforms interfaces=interface
+julia> @packed_array MyArrayType nfaces=4 xybounds=xybounds facebounds=facebounds transforms=transforms interfaces=interface
 
 julia>
 ```

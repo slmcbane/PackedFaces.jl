@@ -187,7 +187,7 @@ end
     connectivity(I, Val(NF))
 end
 
-@pure function connectivity(::PackingSpec{M, N, NF, FB, T, I}, face::Integer) where {M, N, NF, FB, T, I}
-    face_connectivity(I, Val(face))
+@pure function connectivity(s::PackingSpec{M, N, NF, FB, T, I}, face::Integer) where {M, N, NF, FB, T, I}
+    connectivity(s)[face]
 end
 

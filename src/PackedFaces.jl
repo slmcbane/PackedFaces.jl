@@ -38,7 +38,7 @@ This implementation is broken under Julia 1.0.2
 
 @pure connectivity(::PackedFaceArray{T, DIM, SPEC}) where {T, DIM, SPEC} = connectivity(SPEC)
 @pure function connectivity(::PackedFaceArray{T, DIM, SPEC}, face::Integer) where {T, DIM, SPEC}
-    connectivity(SPEC, face)
+    connectivity(SPEC)[face]
 end
 """
 These implementations also broken.

@@ -63,7 +63,7 @@ end
 @pure facebounds(::PackingSpec{M, N, NF, FB}) where {M, N, NF, FB} = FB
 @pure xybounds(::PackingSpec{M, N}) where {M, N} = (M, N)
 @pure transforms(::PackingSpec{M, N, NF, FB, TR}) where {M, N, NF, FB, TR} = TR
-@pure interfaces(::PackingSpec{M, N, NF, FB, T, I}) where {M, N, NF, FB, T, I} = I
+@pure interfaces( ::PackingSpec{M, N, NF, FB, T, I})where {M, N, NF, FB, T, I} = I
 
 function apply_face_transform(A::AbstractArray{T, N}, ::FaceTransform{ROTATE, TRANSPOSE}
                              ) where {T, N, ROTATE, TRANSPOSE}

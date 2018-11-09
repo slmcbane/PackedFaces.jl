@@ -24,10 +24,14 @@ struct FaceInterface{FACES, WHICH, RANGES}
     function FaceInterface(faces::Pair{Int, Int}, which::Pair{FaceCode, FaceCode},
                            ranges::Pair{R1, R2}) where R1 <: OrdinalRange{Int,Int} where R2 <: OrdinalRange{Int,Int}
         @assert faces[1] > 0 && faces[2] > 0
-        @assert faces[1] != faces[2]
         @assert length(ranges[1]) == length(ranges[2])
         new{faces, which, ranges}()
     end
+end
+
+@pure faces(::FaceInterface{FACES}) where FACES = FACES
+@pure function swapfaces(::FaceInterface{FACES, WHICH, RANGES}) where {FACES, WHICH, RANGES}
+    FaceInterface(FACES[2] => FACES[1], WHICH[2] => WHICH[1], RANGES[2] => RANGES[1])
 end
 
 struct FaceTransform{ROTATE, TRANSPOSE}
@@ -59,7 +63,7 @@ end
 @pure facebounds(::PackingSpec{M, N, NF, FB}) where {M, N, NF, FB} = FB
 @pure xybounds(::PackingSpec{M, N}) where {M, N} = (M, N)
 @pure transforms(::PackingSpec{M, N, NF, FB, TR}) where {M, N, NF, FB, TR} = TR
-@pure interfaces(::PackingSpec{M, N, NF, FB, T, I}) where {M, N, NF, FB, T, I} = I
+@pure interfaces( ::PackingSpec{M, N, NF, FB, T, I})where {M, N, NF, FB, T, I} = I
 
 function apply_face_transform(A::AbstractArray{T, N}, ::FaceTransform{ROTATE, TRANSPOSE}
                              ) where {T, N, ROTATE, TRANSPOSE}
@@ -163,3 +167,22 @@ function check_interface(::FaceInterface{FACES, WHICH, RANGES},
         @assert extr[2][2] <= size(B, 1)
     end
 end
+
+@generated function face_connectivity(interfaces::NTuple{NI, FaceInterface}, ::Val{N}) where {NI, N}
+    connect = (i for i ∈ interfaces if N ∈ faces(i))
+    connect = (N == faces[i][2] ? swapfaces(i) : i for i ∈ connect)
+    :($((connect...,)))
+end
+
+@pure function connectivity(interfaces::NTuple{NI, FaceInterface}, ::Val{NFACE}) where {NI, NFACE}
+    (face_connectivity(interfaces, Val(NFACE)), connectivity(interfaces, Val(NFACE-1))...,)
+end
+
+@pure function connectivity(::PackingSpec{M, N, NF, FB, T, I}) where {M, N, NF, FB, T, I}
+    connectivity(I, Val(NF))
+end
+
+@pure function connectivity(::PackingSpec{M, N, NF, FB, T, I}, face::Integer) where {M, N, NF, FB, T, I}
+    face_connectivity(I, Val(face))
+end
+

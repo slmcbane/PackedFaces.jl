@@ -6,7 +6,8 @@ import Base: getindex, setindex!, size
 using Base: @pure
 
 export PackingSpec, FaceInterface, FaceTransform, apply_face_transform, PackedFaceArray,
-       FaceCode, TOP, RIGHT, LEFT, BOTTOM, @packed_array, faces, connectivity
+       FaceCode, TOP, RIGHT, LEFT, BOTTOM, @packed_array, faces, connectivity,
+       packing_spec, interfaces, xybounds, facebounds, transforms
 
 include("PackingSpec.jl")
 
@@ -29,19 +30,26 @@ function faces(A::PackedFaceArray{T, DIM, SPEC}) where {T, DIM, SPEC}
 end
 
 @pure packing_spec(::PackedFaceArray{T, DIM, SPEC}) where {T, DIM, SPEC} = SPEC
+"""
+This implementation is broken under Julia 1.0.2
+
+@pure packing_spec(::Type{ARR}) where ARR <: PackedFaceArray{T, DIM, SPEC} where {T, DIM, SPEC} = SPEC
+"""
 
 @pure connectivity(::PackedFaceArray{T, DIM, SPEC}) where {T, DIM, SPEC} = connectivity(SPEC)
 @pure function connectivity(::PackedFaceArray{T, DIM, SPEC}, face::Integer) where {T, DIM, SPEC}
     connectivity(SPEC, face)
 end
-
-@pure function connectivity(::Type{PackedFaceArray{T, DIM, SPEC}}) where {T, DIM, SPEC}
+"""
+These implementations also broken.
+@pure function connectivity(::Type{ARR}) where ARR <: PackedFaceArray{T, DIM, SPEC} where {T, DIM, SPEC}
     connectivity(SPEC)
 end
 
-@pure function connectivity(::Type{PackedFaceArray{T, DIM, SPEC}}, face::Integer) where {T, DIM, SPEC}
+@pure function connectivity(::Type{ARR}, face::Integer) where ARR <: PackedFaceArray{T, DIM, SPEC} where {T, DIM, SPEC}
     connectivity(SPEC, face)
 end
+"""
 
 include("packed_array.jl")
 

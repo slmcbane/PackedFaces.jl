@@ -177,14 +177,14 @@ end
 @pure function connectivity(interfaces::NTuple{NI, FaceInterface}, ::Val{NFACE}) where {NI, NFACE}
     if NFACE > 0
         (face_connectivity(interfaces, Val(NFACE)),
-         connectivity(interfaces, Val(NFACE-1))...,) |> reverse
+         connectivity(interfaces, Val(NFACE-1))...,)
     else
         ()
     end
 end
 
 @pure function connectivity(::PackingSpec{M, N, NF, FB, T, I}) where {M, N, NF, FB, T, I}
-    connectivity(I, Val(NF))
+    connectivity(I, Val(NF)) |> reverse
 end
 
 @pure function connectivity(s::PackingSpec{M, N, NF, FB, T, I}, face::Integer) where {M, N, NF, FB, T, I}

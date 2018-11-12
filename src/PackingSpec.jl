@@ -54,6 +54,8 @@ struct FaceInterface{FACES, WHICH, RANGES}
 end
 
 @pure faces(::FaceInterface{FACES}) where FACES = FACES
+@pure which(::FaceInterface{FACES, WHICH}) where WHICH = WHICH
+@pure ranges(::FaceInterface{FACES, WHICH, RANGES}) where {FACES, WHICH, RANGES} = RANGES
 function swapfaces(::FaceInterface{FACES, WHICH, RANGES}) where {FACES, WHICH, RANGES}
     FaceInterface(FACES[2] => FACES[1], WHICH[2] => WHICH[1], RANGES[2] => RANGES[1])
 end

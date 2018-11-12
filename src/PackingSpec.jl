@@ -1,5 +1,29 @@
 @enum FaceCode TOP RIGHT LEFT BOTTOM
 
+function rightof(c::FaceCode)
+    if c === TOP
+        RIGHT
+    elseif c === RIGHT
+        BOTTOM
+    elseif c === BOTTOM
+        LEFT
+    else
+        TOP
+    end
+end
+
+function leftof(c::FaceCode)
+    if c === TOP
+        LEFT
+    elseif c === LEFT
+        BOTTOM
+    elseif c === BOTTOM
+        RIGHT
+    else
+        TOP
+    end
+end
+
 """
 Synopsis
 --------

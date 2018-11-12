@@ -6,7 +6,7 @@ import Base: getindex, setindex!, size
 using Base: @pure, @propagate_inbounds
 
 export PackingSpec, FaceInterface, FaceTransform, apply_face_transform, PackedFaceArray,
-       FaceCode, TOP, RIGHT, LEFT, BOTTOM, @packed_array, packing_spec
+       FaceCode, TOP, RIGHT, LEFT, BOTTOM, @packed_array, packing_spec, leftof, rightof
 
 include("PackingSpec.jl")
 

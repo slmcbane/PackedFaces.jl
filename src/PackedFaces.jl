@@ -2,7 +2,7 @@ module PackedFaces
 
 using MirroredArrays
 
-import Base: getindex, setindex!, size
+import Base: getindex, setindex!, size, which
 using Base: @pure, @propagate_inbounds
 
 export PackingSpec, FaceInterface, FaceTransform, apply_face_transform, PackedFaceArray,

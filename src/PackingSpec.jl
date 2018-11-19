@@ -91,6 +91,10 @@ end
 @pure transforms(::PackingSpec{M, N, NF, FB, TR}) where {M, N, NF, FB, TR} = TR
 @pure interfaces(::PackingSpec{M, N, NF, FB, T, I}) where {M, N, NF, FB, T, I} = I
 
+function mirror(A::AbstractArray, d...)
+    view(A, (n in d ? (size(A, n):-1:1) : Colon() for n in 1:ndims(A))...)
+end
+
 function apply_face_transform(A::AbstractArray{T, N}, ::FaceTransform{ROTATE, TRANSPOSE}
                              ) where {T, N, ROTATE, TRANSPOSE}
     @assert ROTATE ∈ (0, 1, 2, 3)
@@ -100,21 +104,21 @@ function apply_face_transform(A::AbstractArray{T, N}, ::FaceTransform{ROTATE, TR
         if ROTATE == 0
             PermutedDimsArray(A, (2, 1, 3:N...,))
         elseif ROTATE == 1
-            MirroredArray(A, 1)
+            mirror(A, 1)
         elseif ROTATE == 2
-            PermutedDimsArray(MirroredArray(A, 1, 2), (2, 1, 3:N...,))
+            PermutedDimsArray(mirror(A, 1, 2), (2, 1, 3:N...,))
         else # ROTATE == 3
-            MirroredArray(A, 2)
+            mirror(A, 2)
         end
     else
         if ROTATE == 0
             A
         elseif ROTATE == 1
-            MirroredArray(PermutedDimsArray(A, (2, 1, 3:N...,)), 2)
+            mirror(PermutedDimsArray(A, (2, 1, 3:N...,)), 2)
         elseif ROTATE == 2
-            MirroredArray(A, 1, 2)
+            mirror(A, 1, 2)
         else # ROTATE == 3
-            PermutedDimsArray(MirroredArray(A, 2), (2, 1, 3:N...,))
+            PermutedDimsArray(mirror(A, 2), (2, 1, 3:N...,))
         end
     end
 end

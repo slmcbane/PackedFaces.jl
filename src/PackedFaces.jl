@@ -1,7 +1,5 @@
 module PackedFaces
 
-using MirroredArrays
-
 import Base: getindex, setindex!, size, which
 using Base: @pure, @propagate_inbounds
 

@@ -42,6 +42,10 @@ macro packed_array(tp_name::Symbol, args...)
                     new{T, N, typeof(A)}(A)
                 end
             end
+
+            function $(esc(tp_name)){T, N, ARR}(arr::ARR) where {T, N, ARR}
+                $(esc(tp_name))(arr)
+            end
         end
     end
 end

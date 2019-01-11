@@ -1,6 +1,6 @@
 module PackedFaces
 
-import Base: getindex, setindex!, size, which, similar
+import Base: getindex, setindex!, size, which, similar, BroadcastStyle
 using Base: @pure, @propagate_inbounds
 
 export PackingSpec, FaceInterface, FaceTransform, apply_face_transform, PackedFaceArray,
@@ -15,6 +15,8 @@ abstract type PackedFaceArray{T, N, SPEC} <: AbstractArray{T, N} end
 @propagate_inbounds setindex!(A::PackedFaceArray, v, I::Vararg{Int, N}) where N = (A.data[I...] = v)
 size(A::PackedFaceArray) = size(A.data)
 
+storage_type(::Type{T}) where T = nothing
+
 similar(A::PackedFaceArray) = typeof(A)(similar(A.data))
 
 function faces(A::PackedFaceArray{T, DIM, SPEC}) where {T, DIM, SPEC}
@@ -26,6 +28,17 @@ function faces(A::PackedFaceArray{T, DIM, SPEC}) where {T, DIM, SPEC}
        ) for i ∈ 1:nfaces(SPEC)
       )...,
     )
+end
+
+struct PackedFaceBCStyle{T} <: Base.BroadcastStyle end
+
+function Base.BroadcastStyle(::Type{T}) where T <: PackedFaceArray{Eltype, DIM, SPEC} where {Eltype, DIM, SPEC}
+    PackedFaceBCStyle{T}()
+end
+
+function similar(bc::Base.Broadcast.Broadcasted{PackedFaceBCStyle{T}}, ::Type{ElType}
+                ) where T <: PackedFaceArray{ElType, DIM} where {DIM, ElType}
+    T(similar(storage_type(T), axes(bc)))
 end
 
 @pure packing_spec(::PackedFaceArray{T, DIM, SPEC}) where {T, DIM, SPEC} = SPEC

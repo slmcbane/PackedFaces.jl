@@ -27,9 +27,6 @@ macro packed_array(tp_name::Symbol, args...)
     end
 
     quote
-        import Base: BroadcastStyle, similar
-        import PackedFaces: storage_type
-
         let SPEC = PackingSpec(
             nfaces = $(esc(args_received[:nfaces])),
             xybounds = $(esc(args_received[:xybounds])),
@@ -50,8 +47,6 @@ macro packed_array(tp_name::Symbol, args...)
                 $(esc(tp_name))(arr)
             end
         end
-
-        PackedFaces.storage_type(::Type{T}) where T <: $(esc(tp_name)){S,N,ARR} where {S, N, ARR} = ARR
     end
 end
 

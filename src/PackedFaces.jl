@@ -1,6 +1,7 @@
 module PackedFaces
 
-import Base: getindex, setindex!, size, which, similar
+import Base: getindex, setindex!, size, which, similar, strides,
+             unsafe_convert
 using Base: @pure, @propagate_inbounds
 
 export PackingSpec, FaceInterface, FaceTransform, apply_face_transform, PackedFaceArray,
@@ -14,8 +15,10 @@ abstract type PackedFaceArray{T, N, SPEC} <: AbstractArray{T, N} end
 @propagate_inbounds getindex(A::PackedFaceArray, I::Vararg{Int, N}) where N = A.data[I...]
 @propagate_inbounds setindex!(A::PackedFaceArray, v, I::Vararg{Int, N}) where N = (A.data[I...] = v)
 size(A::PackedFaceArray) = size(A.data)
-
 similar(A::PackedFaceArray) = typeof(A)(similar(A.data))
+strides(A::PackedFaceArray) = strides(A.data)
+unsafe_convert(::Type{Ptr{T}}, A::PackedFaceArray{T}) where T =
+    unsafe_convert(Ptr{T}, A.data)
 
 function faces(A::PackedFaceArray{T, DIM, SPEC}) where {T, DIM, SPEC}
     fbs = facebounds(SPEC)
